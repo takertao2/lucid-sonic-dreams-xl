@@ -32,6 +32,7 @@ from .sample_effects import *
 #StyleGAN2 Imports
 cwd = os.getcwd()
 
+
 class LucidSonicDream:
 
     def __init__(self,
