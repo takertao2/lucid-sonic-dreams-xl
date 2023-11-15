@@ -696,42 +696,41 @@ for arg in ['array', 'strength', 'amplitude']:
         sys.exit('func must be a function with parameters '\
                  'array, strength, and amplitude')
 
-
     def render_audio(self, start, duration, n_mels, hop_length):
         '''Prepare normalized spectrogram of audio to be used for effect'''
 
-
 # Load spectrogram
+
     wav, sr = librosa.load(self.audio, offset=start, duration=duration)
 
-# If percussive = True, decompose harmonic and percussive signals
+    # If percussive = True, decompose harmonic and percussive signals
     if self.percussive:
         wav = librosa.effects.hpss(wav)[1]
+
 
 # Get normalized spectrogram
     self.spec = get_spec_norm(wav, sr, n_mels=n_mels, hop_length=hop_length)
 
-
     def apply_effect(self, array, index):
         '''Apply effect to image (array)'''
         amplitude = self.spec[index]
-        return self.func(array=array, strength=self.strength, amplitude=amplitude)
-
+        return self.func(array=array,
+                         strength=self.strength,
+                         amplitude=amplitude)
 
     def convert_images_from_uint8(images, drange=[-1, 1], nhwc_to_nchw=False):
         """Convert a minibatch of images from uint8 to float32 with configurable dynamic range. Can be used as an input transformation for Network.run()."""
-        
+
         print(images)
         images = tf.cast(images, tf.float32)
         if nhwc_to_nchw:
             images = tf.transpose(images, [0, 3, 1, 2])
         return (images - drange[0]) * ((drange[1] - drange[0]) / 255)
 
-
     def convert_images_to_uint8(images,
-                            drange=[-1, 1],
-                            nchw_to_nhwc=False,
-                            shrink=1):
+                                drange=[-1, 1],
+                                nchw_to_nhwc=False,
+                                shrink=1):
         """Convert a minibatch of images from float32 to uint8 with configurable dynamic range.Can be used as an output transformation for Network.run()."""
 
         images = tf.cast(images, tf.float32)
