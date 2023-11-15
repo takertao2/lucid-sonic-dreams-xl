@@ -213,8 +213,7 @@ else:
         return update_vec(current_noise, motion_signs)
 
     def generate_class_vec(self, frame):
-        '''Generate a class vector using chromagram, where each pitch 
-        corresponds to a class'''
+        '''Generate a class vector using chromagram, where each pitch corresponds to a class'''
 
         classes = self.classes
         chrom_class = self.chrom_class
