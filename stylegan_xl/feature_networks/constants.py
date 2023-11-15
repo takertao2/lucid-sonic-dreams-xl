@@ -97,15 +97,11 @@ VITS_IMAGENET = [
     'deit_base_distilled_patch16_224',
 ]
 
-VITS_INCEPTION = [
-    'vit_base_patch16_224'
-]
+VITS_INCEPTION = ['vit_base_patch16_224']
 
 VITS = VITS_IMAGENET + VITS_INCEPTION
 
-CLIP = [
-    'resnet50_clip'
-]
+CLIP = ['resnet50_clip']
 
 ALL_MODELS = TORCHVISION + REGNETS + EFFNETS + VITS + CLIP
 

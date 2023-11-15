@@ -23,8 +23,10 @@ from feature_networks import clip
 
 #----------------------------------------------------------------------------
 
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self, name, fmt=':f'):
         self.name = name
         self.fmt = fmt
@@ -48,6 +50,7 @@ class AverageMeter(object):
 
 
 class ProgressMeter(object):
+
     def __init__(self, num_batches, meters, prefix=""):
         self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
         self.meters = meters
@@ -83,7 +86,7 @@ def num_range(s: str) -> List[int]:
     range_re = re.compile(r'^(\d+)-(\d+)$')
     m = range_re.match(s)
     if m:
-        return list(range(int(m.group(1)), int(m.group(2))+1))
+        return list(range(int(m.group(1)), int(m.group(2)) + 1))
     vals = s.split(',')
     return [int(x) for x in vals]
 
@@ -99,7 +102,7 @@ def forward_synthesis(G, styles):
 
     for idx, name in enumerate(G.synthesis.layer_names):
         block = getattr(G.synthesis, name)
-        s = styles[:, idx+1][:, :block.in_channels]
+        s = styles[:, idx + 1][:, :block.in_channels]
 
         # adjust block
         block.affine = nn.Identity()
@@ -121,7 +124,9 @@ def spherical_dist_loss(x, y):
 
 
 def prompts_dist_loss(x, targets, loss):
-    if len(targets) == 1:  # Keeps consistent results vs previous method for single objective guidance
+    if len(
+            targets
+    ) == 1:  # Keeps consistent results vs previous method for single objective guidance
         return loss(x, targets[0])
     distances = [loss(x, target) for target in targets]
     return torch.stack(distances, dim=-1).sum(dim=-1)
@@ -147,11 +152,14 @@ def generate_edit(
 
     if save_video:
 
-        video_out = imageio.get_writer(path+'.mp4', mode='I', fps=60, codec='libx264')
-        for grad_change in np.arange(0, 1, 0.005)*edit_strength:
+        video_out = imageio.get_writer(path + '.mp4',
+                                       mode='I',
+                                       fps=60,
+                                       codec='libx264')
+        for grad_change in np.arange(0, 1, 0.005) * edit_strength:
 
             with torch.no_grad():
-                img = forward_synthesis(G, styles + direction*grad_change)
+                img = forward_synthesis(G, styles + direction * grad_change)
 
             img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255)
             video_out.append_data(img[0].to(torch.uint8).cpu().numpy())
@@ -160,7 +168,7 @@ def generate_edit(
     else:
 
         imgs = []
-        grad_changes = [x*edit_strength for x in [0, 0.25, 0.5, 0.75, 1]]
+        grad_changes = [x * edit_strength for x in [0, 0.25, 0.5, 0.75, 1]]
 
         for i, grad_change in enumerate(grad_changes):
             with torch.no_grad():
@@ -168,7 +176,8 @@ def generate_edit(
             img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255)
             imgs.append(img[0].to(torch.uint8).cpu().numpy())
 
-        PIL.Image.fromarray(np.concatenate(imgs, axis=1), 'RGB').save(path + '.png')
+        PIL.Image.fromarray(np.concatenate(imgs, axis=1),
+                            'RGB').save(path + '.png')
 
     print(f"Time for generating edits: {timer() - time_start:.2f} s")
 
@@ -189,12 +198,18 @@ def find_direction(
     detector_url = 'https://s3.eu-central-1.amazonaws.com/avg-projects/stylegan_xl/feature_networks/clip_vitb_patch32.pkl'
     clip_model = get_feature_detector(url=detector_url).to(device)
     texts = [frase.strip() for frase in text_prompt.split("|") if frase]
-    targets = [embed_text(clip_model.model, text, device=device) for text in texts]
+    targets = [
+        embed_text(clip_model.model, text, device=device) for text in texts
+    ]
 
     # sample styles
     all_styles = []
     for seed_idx, seed in enumerate(seeds):
-        ws = gen_utils.get_w_from_seed(G, 1, device, seed=seed, class_idx=class_idx)
+        ws = gen_utils.get_w_from_seed(G,
+                                       1,
+                                       device,
+                                       seed=seed,
+                                       class_idx=class_idx)
         ws = ws.to(torch.float32).unbind(dim=1)
         all_styles.append(w_s_converter(G, ws, device))
     all_styles = torch.cat(all_styles)
@@ -210,7 +225,10 @@ def find_direction(
     direction_tracker = torch.zeros_like(direction)
 
     grads = []
-    opt = torch.optim.AdamW([direction], lr=0.05, betas=(0., 0.999), weight_decay=0.25)
+    opt = torch.optim.AdamW([direction],
+                            lr=0.05,
+                            betas=(0., 0.999),
+                            weight_decay=0.25)
 
     for seed_idx in range(len(seeds)):
 
@@ -231,7 +249,8 @@ def find_direction(
         if not (seed_idx % batch_size):
 
             # zeroing out gradients for non-optimized layers
-            layers_zeroed = torch.tensor([x for x in range(G.num_ws) if not x in layers])
+            layers_zeroed = torch.tensor(
+                [x for x in range(G.num_ws) if not x in layers])
             direction.grad[:, layers_zeroed] = 0
 
             opt.step()
@@ -264,10 +283,10 @@ def w_s_converter(G, ws, device='cuda', unit_test=False):
     # synthesis layers
     for i, name in enumerate(G.synthesis.layer_names):
         block = getattr(G.synthesis, name)
-        w = ws[i+1]
+        w = ws[i + 1]
         style = block.affine(w)
         style_sz = style.shape[1]
-        styles[0, i+1:i+2, :style_sz] = style
+        styles[0, i + 1:i + 2, :style_sz] = style
 
     if unit_test:
         os.makedirs('unit_tests', exist_ok=True)
@@ -283,14 +302,38 @@ def w_s_converter(G, ws, device='cuda', unit_test=False):
 
 @click.command()
 @click.pass_context
-@click.option('--network', 'network_pkl', help='Network pickle filename. Used for computing the direction and optionally producing the final output', required=True)
-@click.option('--bigger-network', 'bigger_network_pkl', help='Network pickle filename of bigger network. Used for upsampling.')
-@click.option('--seeds', type=num_range, help='List of random seeds', required=True)
-@click.option('--layers', type=num_range, help='Restrict the style space to a range of layers. We recommend not to optimize the critically sampled layers (last 3).', required=True)
+@click.option(
+    '--network',
+    'network_pkl',
+    help=
+    'Network pickle filename. Used for computing the direction and optionally producing the final output',
+    required=True)
+@click.option(
+    '--bigger-network',
+    'bigger_network_pkl',
+    help='Network pickle filename of bigger network. Used for upsampling.')
+@click.option('--seeds',
+              type=num_range,
+              help='List of random seeds',
+              required=True)
+@click.option(
+    '--layers',
+    type=num_range,
+    help=
+    'Restrict the style space to a range of layers. We recommend not to optimize the critically sampled layers (last 3).',
+    required=True)
 @click.option('--text-prompt', help='Text', type=str, required=True)
-@click.option('--edit-strength', help='Strength of edit', type=float, required=True)
-@click.option('--outdir', help='Where to save the output images', type=str, required=True)
-@click.option('--class-idx', help='Class label (unconditional if not specified)', type=int)
+@click.option('--edit-strength',
+              help='Strength of edit',
+              type=float,
+              required=True)
+@click.option('--outdir',
+              help='Where to save the output images',
+              type=str,
+              required=True)
+@click.option('--class-idx',
+              help='Class label (unconditional if not specified)',
+              type=int)
 @click.option('--w-path', help='Path to npz containing style code.', type=str)
 @click.option('--init-seed', help='Seed of in inital image', type=int)
 @click.option('--save-video', help='Save video of edit', is_flag=True)
@@ -308,12 +351,13 @@ def stylemc(
     save_video: Optional[bool],
     bigger_network_pkl: Optional[str],
 ):
-    assert not((w_path is None) and (init_seed is None)), "Provide either w-path or init-seed"
+    assert not ((w_path is None) and
+                (init_seed is None)), "Provide either w-path or init-seed"
 
     print('Loading networks from "%s"...' % network_pkl)
     device = torch.device('cuda')
     with dnnlib.util.open_url(network_pkl) as f:
-        G = legacy.load_network_pkl(f)['G_ema'].to(device) # type: ignore
+        G = legacy.load_network_pkl(f)['G_ema'].to(device)  # type: ignore
 
     os.makedirs(outdir, exist_ok=True)
 
@@ -322,20 +366,28 @@ def stylemc(
         w = gen_utils.get_w_from_file(w_path, device)
         w = w.repeat(1, G.num_ws, 1)
     else:
-        w = gen_utils.get_w_from_seed(G, batch_sz=1, device=device, truncation_psi=1.0,
-                                      seed=init_seed, class_idx=class_idx)
+        w = gen_utils.get_w_from_seed(G,
+                                      batch_sz=1,
+                                      device=device,
+                                      truncation_psi=1.0,
+                                      seed=init_seed,
+                                      class_idx=class_idx)
 
     # find direction
     init_styles = w_s_converter(G, w.unbind(1), device=device)
-    direction = find_direction(
-        G, init_styles, text_prompt, layers=layers, seeds=seeds, class_idx=class_idx, device=device
-    )
+    direction = find_direction(G,
+                               init_styles,
+                               text_prompt,
+                               layers=layers,
+                               seeds=seeds,
+                               class_idx=class_idx,
+                               device=device)
 
     # generate edited images
     if bigger_network_pkl:
 
         with dnnlib.util.open_url(bigger_network_pkl) as f:
-            G = legacy.load_network_pkl(f)['G_ema'].to(device) # type: ignore
+            G = legacy.load_network_pkl(f)['G_ema'].to(device)  # type: ignore
 
         # adjust styles
         w = w[:, 0].repeat(1, G.mapping.num_ws, 1)
@@ -343,11 +395,16 @@ def stylemc(
         padding = (0, 0, 0, init_styles.shape[1] - direction.shape[1])
         direction = F.pad(direction, padding, "constant", 0)
 
-
     text_prompt = text_prompt.replace(" ", "_")
     path = f'{outdir}/{text_prompt}_{edit_strength}'
-    generate_edit(G, init_styles, direction, edit_strength=edit_strength, path=path,
-                  save_video=save_video, device=device)
+    generate_edit(G,
+                  init_styles,
+                  direction,
+                  edit_strength=edit_strength,
+                  path=path,
+                  save_video=save_video,
+                  device=device)
+
 
 if __name__ == "__main__":
     stylemc()

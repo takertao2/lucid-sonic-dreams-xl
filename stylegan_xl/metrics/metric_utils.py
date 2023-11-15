@@ -8,7 +8,6 @@
 #
 # modified by Axel Sauer for "StyleGAN-XL: Scaling StyleGAN to Large Diverse Datasets"
 #
-
 """Miscellaneous utilities used internally by the quality metrics."""
 
 import os
@@ -32,41 +31,63 @@ from torch_utils import gen_utils
 
 #----------------------------------------------------------------------------
 
+
 class MetricOptions:
-    def __init__(self, G=None, G_kwargs={}, dataset_kwargs={}, num_gpus=1, rank=0, device=None, progress=None, cache=True, feature_network=None):
+
+    def __init__(self,
+                 G=None,
+                 G_kwargs={},
+                 dataset_kwargs={},
+                 num_gpus=1,
+                 rank=0,
+                 device=None,
+                 progress=None,
+                 cache=True,
+                 feature_network=None):
         assert 0 <= rank < num_gpus
-        self.G              = G
-        self.G_kwargs       = dnnlib.EasyDict(G_kwargs)
+        self.G = G
+        self.G_kwargs = dnnlib.EasyDict(G_kwargs)
         self.dataset_kwargs = dnnlib.EasyDict(dataset_kwargs)
-        self.num_gpus       = num_gpus
-        self.rank           = rank
-        self.device         = device if device is not None else torch.device('cuda', rank)
-        self.progress       = progress.sub() if progress is not None and rank == 0 else ProgressMonitor()
-        self.cache          = cache
+        self.num_gpus = num_gpus
+        self.rank = rank
+        self.device = device if device is not None else torch.device(
+            'cuda', rank)
+        self.progress = progress.sub(
+        ) if progress is not None and rank == 0 else ProgressMonitor()
+        self.cache = cache
         self.feature_network = feature_network
+
 
 #----------------------------------------------------------------------------
 
 _feature_detector_cache = dict()
 
+
 def get_feature_detector_name(url):
     return os.path.splitext(url.split('/')[-1])[0]
 
-def get_feature_detector(url, device=torch.device('cpu'), num_gpus=1, rank=0, verbose=False):
+
+def get_feature_detector(url,
+                         device=torch.device('cpu'),
+                         num_gpus=1,
+                         rank=0,
+                         verbose=False):
     assert 0 <= rank < num_gpus
     key = (url, device)
     if key not in _feature_detector_cache:
         is_leader = (rank == 0)
         if not is_leader and num_gpus > 1:
-            torch.distributed.barrier() # leader goes first
+            torch.distributed.barrier()  # leader goes first
         with dnnlib.util.open_url(url, verbose=(verbose and is_leader)) as f:
             _feature_detector_cache[key] = dill.load(f).to(device)
             # _feature_detector_cache[key] = pickle.load(f).to(device)
         if is_leader and num_gpus > 1:
-            torch.distributed.barrier() # others follow
+            torch.distributed.barrier()  # others follow
     return _feature_detector_cache[key]
 
+
 #----------------------------------------------------------------------------
+
 
 def iterate_random_labels(opts, batch_size):
     if opts.G.c_dim == 0:
@@ -76,14 +97,23 @@ def iterate_random_labels(opts, batch_size):
     else:
         dataset = dnnlib.util.construct_class_by_name(**opts.dataset_kwargs)
         while True:
-            c = [dataset.get_label(np.random.randint(len(dataset))) for _i in range(batch_size)]
+            c = [
+                dataset.get_label(np.random.randint(len(dataset)))
+                for _i in range(batch_size)
+            ]
             c = torch.from_numpy(np.stack(c)).pin_memory().to(opts.device)
             yield c
 
+
 #----------------------------------------------------------------------------
 
+
 class FeatureStats:
-    def __init__(self, capture_all=False, capture_mean_cov=False, max_items=None):
+
+    def __init__(self,
+                 capture_all=False,
+                 capture_mean_cov=False,
+                 max_items=None):
         self.capture_all = capture_all
         self.capture_mean_cov = capture_mean_cov
         self.max_items = max_items
@@ -100,15 +130,18 @@ class FeatureStats:
             self.num_features = num_features
             self.all_features = []
             self.raw_mean = np.zeros([num_features], dtype=np.float64)
-            self.raw_cov = np.zeros([num_features, num_features], dtype=np.float64)
+            self.raw_cov = np.zeros([num_features, num_features],
+                                    dtype=np.float64)
 
     def is_full(self):
-        return (self.max_items is not None) and (self.num_items >= self.max_items)
+        return (self.max_items is not None) and (self.num_items
+                                                 >= self.max_items)
 
     def append(self, x):
         x = np.asarray(x, dtype=np.float32)
         assert x.ndim == 2
-        if (self.max_items is not None) and (self.num_items + x.shape[0] > self.max_items):
+        if (self.max_items is not None) and (self.num_items + x.shape[0]
+                                             > self.max_items):
             if self.num_items >= self.max_items:
                 return
             x = x[:self.max_items - self.num_items]
@@ -131,7 +164,7 @@ class FeatureStats:
                 y = x.clone()
                 torch.distributed.broadcast(y, src=src)
                 ys.append(y)
-            x = torch.stack(ys, dim=1).flatten(0, 1) # interleave samples
+            x = torch.stack(ys, dim=1).flatten(0, 1)  # interleave samples
         self.append(x.cpu().numpy())
 
     def get_all(self):
@@ -160,10 +193,21 @@ class FeatureStats:
         obj.__dict__.update(s)
         return obj
 
+
 #----------------------------------------------------------------------------
 
+
 class ProgressMonitor:
-    def __init__(self, tag=None, num_items=None, flush_interval=1000, verbose=False, progress_fn=None, pfn_lo=0, pfn_hi=1000, pfn_total=1000):
+
+    def __init__(self,
+                 tag=None,
+                 num_items=None,
+                 flush_interval=1000,
+                 verbose=False,
+                 progress_fn=None,
+                 pfn_lo=0,
+                 pfn_hi=1000,
+                 pfn_total=1000):
         self.tag = tag
         self.num_items = num_items
         self.verbose = verbose
@@ -180,44 +224,74 @@ class ProgressMonitor:
 
     def update(self, cur_items):
         assert (self.num_items is None) or (cur_items <= self.num_items)
-        if (cur_items < self.batch_items + self.flush_interval) and (self.num_items is None or cur_items < self.num_items):
+        if (cur_items < self.batch_items + self.flush_interval) and (
+                self.num_items is None or cur_items < self.num_items):
             return
         cur_time = time.time()
         total_time = cur_time - self.start_time
-        time_per_item = (cur_time - self.batch_time) / max(cur_items - self.batch_items, 1)
+        time_per_item = (cur_time - self.batch_time) / max(
+            cur_items - self.batch_items, 1)
         if (self.verbose) and (self.tag is not None):
-            print(f'{self.tag:<19s} items {cur_items:<7d} time {dnnlib.util.format_time(total_time):<12s} ms/item {time_per_item*1e3:.2f}')
+            print(
+                f'{self.tag:<19s} items {cur_items:<7d} time {dnnlib.util.format_time(total_time):<12s} ms/item {time_per_item*1e3:.2f}'
+            )
         self.batch_time = cur_time
         self.batch_items = cur_items
 
         if (self.progress_fn is not None) and (self.num_items is not None):
-            self.progress_fn(self.pfn_lo + (self.pfn_hi - self.pfn_lo) * (cur_items / self.num_items), self.pfn_total)
+            self.progress_fn(
+                self.pfn_lo + (self.pfn_hi - self.pfn_lo) *
+                (cur_items / self.num_items), self.pfn_total)
 
-    def sub(self, tag=None, num_items=None, flush_interval=1000, rel_lo=0, rel_hi=1):
+    def sub(self,
+            tag=None,
+            num_items=None,
+            flush_interval=1000,
+            rel_lo=0,
+            rel_hi=1):
         return ProgressMonitor(
-            tag             = tag,
-            num_items       = num_items,
-            flush_interval  = flush_interval,
-            verbose         = self.verbose,
-            progress_fn     = self.progress_fn,
-            pfn_lo          = self.pfn_lo + (self.pfn_hi - self.pfn_lo) * rel_lo,
-            pfn_hi          = self.pfn_lo + (self.pfn_hi - self.pfn_lo) * rel_hi,
-            pfn_total       = self.pfn_total,
+            tag=tag,
+            num_items=num_items,
+            flush_interval=flush_interval,
+            verbose=self.verbose,
+            progress_fn=self.progress_fn,
+            pfn_lo=self.pfn_lo + (self.pfn_hi - self.pfn_lo) * rel_lo,
+            pfn_hi=self.pfn_lo + (self.pfn_hi - self.pfn_lo) * rel_hi,
+            pfn_total=self.pfn_total,
         )
+
 
 #----------------------------------------------------------------------------
 
 activation = {}
+
+
 def getActivation(name):
-  def hook(model, input, output):
-    activation[name] = output.detach()
-  return hook
+
+    def hook(model, input, output):
+        activation[name] = output.detach()
+
+    return hook
+
 
 #----------------------------------------------------------------------------
 
-def compute_feature_stats_for_dataset(opts, detector_url, detector_kwargs, rel_lo=0, rel_hi=1, batch_size=64, data_loader_kwargs=None, max_items=None, sfid=False, shuffle_size=None, **stats_kwargs):
+
+def compute_feature_stats_for_dataset(opts,
+                                      detector_url,
+                                      detector_kwargs,
+                                      rel_lo=0,
+                                      rel_hi=1,
+                                      batch_size=64,
+                                      data_loader_kwargs=None,
+                                      max_items=None,
+                                      sfid=False,
+                                      shuffle_size=None,
+                                      **stats_kwargs):
     if data_loader_kwargs is None:
-        data_loader_kwargs = dict(pin_memory=True, num_workers=3, prefetch_factor=2)
+        data_loader_kwargs = dict(pin_memory=True,
+                                  num_workers=3,
+                                  prefetch_factor=2)
 
     # Try to lookup from cache.
     cache_file = None
@@ -229,15 +303,23 @@ def compute_feature_stats_for_dataset(opts, detector_url, detector_kwargs, rel_l
 
         # Choose cache file name.
         dataset_name = Path(opts.dataset_kwargs.path).stem
-        args = dict(dataset_kwargs=opts.dataset_kwargs, detector_url=detector_url, detector_kwargs=detector_kwargs, stats_kwargs=stats_kwargs, sfid=sfid, shuffle_size=shuffle_size)
+        args = dict(dataset_kwargs=opts.dataset_kwargs,
+                    detector_url=detector_url,
+                    detector_kwargs=detector_kwargs,
+                    stats_kwargs=stats_kwargs,
+                    sfid=sfid,
+                    shuffle_size=shuffle_size)
         md5 = hashlib.md5(repr(sorted(args.items())).encode('utf-8'))
         cache_tag = f'{dataset_name}-{det_name}-{md5.hexdigest()}'
-        cache_file = os.path.join('.', 'dnnlib', 'gan-metrics', cache_tag + '.pkl')
+        cache_file = os.path.join('.', 'dnnlib', 'gan-metrics',
+                                  cache_tag + '.pkl')
 
         # Check if the file exists (all processes must agree).
         flag = os.path.isfile(cache_file) if opts.rank == 0 else False
         if opts.num_gpus > 1:
-            flag = torch.as_tensor(flag, dtype=torch.float32, device=opts.device)
+            flag = torch.as_tensor(flag,
+                                   dtype=torch.float32,
+                                   device=opts.device)
             torch.distributed.broadcast(tensor=flag, src=0)
             flag = (float(flag.cpu()) != 0)
 
@@ -254,26 +336,40 @@ def compute_feature_stats_for_dataset(opts, detector_url, detector_kwargs, rel_l
     if max_items is not None:
         num_items = min(num_items, max_items)
     stats = FeatureStats(max_items=num_items, **stats_kwargs)
-    progress = opts.progress.sub(tag='dataset features', num_items=num_items, rel_lo=rel_lo, rel_hi=rel_hi)
+    progress = opts.progress.sub(tag='dataset features',
+                                 num_items=num_items,
+                                 rel_lo=rel_lo,
+                                 rel_hi=rel_hi)
 
     # get detector
     if opts.feature_network is not None:
         with contextlib.redirect_stdout(None):
-            detector = F_RandomProj(opts.feature_network, proj_type=1).eval().to(opts.device)
+            detector = F_RandomProj(opts.feature_network,
+                                    proj_type=1).eval().to(opts.device)
             detector.proj_type = 0
     else:
-        detector = get_feature_detector(url=detector_url, device=opts.device, num_gpus=opts.num_gpus, rank=opts.rank, verbose=progress.verbose)
+        detector = get_feature_detector(url=detector_url,
+                                        device=opts.device,
+                                        num_gpus=opts.num_gpus,
+                                        rank=opts.rank,
+                                        verbose=progress.verbose)
 
     # Main loop.
     if sfid:
-        detector.layers.mixed_6.conv.register_forward_hook(getActivation('mixed6_conv'))
+        detector.layers.mixed_6.conv.register_forward_hook(
+            getActivation('mixed6_conv'))
 
-    item_subset = [(i * opts.num_gpus + opts.rank) % num_items for i in range((num_items - 1) // opts.num_gpus + 1)]
+    item_subset = [(i * opts.num_gpus + opts.rank) % num_items
+                   for i in range((num_items - 1) // opts.num_gpus + 1)]
     if shuffle_size is not None:
         random.shuffle(item_subset)
         item_subset = item_subset[:shuffle_size]
 
-    for images, _labels in tqdm(torch.utils.data.DataLoader(dataset=dataset, sampler=item_subset, batch_size=batch_size, **data_loader_kwargs)):
+    for images, _labels in tqdm(
+            torch.utils.data.DataLoader(dataset=dataset,
+                                        sampler=item_subset,
+                                        batch_size=batch_size,
+                                        **data_loader_kwargs)):
         if images.shape[1] == 1:
             images = images.repeat([1, 3, 1, 1])
 
@@ -285,7 +381,8 @@ def compute_feature_stats_for_dataset(opts, detector_url, detector_kwargs, rel_l
             else:
                 images = images.to(opts.device).to(torch.float32) / 127.5 - 1
                 features = detector(images)
-                features = torch.nn.AdaptiveAvgPool2d(1)(features['3']).squeeze()
+                features = torch.nn.AdaptiveAvgPool2d(1)(
+                    features['3']).squeeze()
 
         stats.append_torch(features, num_gpus=opts.num_gpus, rank=opts.rank)
         progress.update(stats.num_items)
@@ -298,9 +395,19 @@ def compute_feature_stats_for_dataset(opts, detector_url, detector_kwargs, rel_l
         os.replace(temp_file, cache_file)  # atomic
     return stats
 
+
 #----------------------------------------------------------------------------
 
-def compute_feature_stats_for_generator(opts, detector_url, detector_kwargs, rel_lo=0, rel_hi=1, batch_size=64, batch_gen=None, sfid=False, **stats_kwargs):
+
+def compute_feature_stats_for_generator(opts,
+                                        detector_url,
+                                        detector_kwargs,
+                                        rel_lo=0,
+                                        rel_hi=1,
+                                        batch_size=64,
+                                        batch_gen=None,
+                                        sfid=False,
+                                        **stats_kwargs):
     if batch_gen is None:
         batch_gen = min(batch_size, 4)
     assert batch_size % batch_gen == 0
@@ -311,24 +418,34 @@ def compute_feature_stats_for_generator(opts, detector_url, detector_kwargs, rel
     # Initialize.
     stats = FeatureStats(**stats_kwargs)
     assert stats.max_items is not None
-    progress = opts.progress.sub(tag='generator features', num_items=stats.max_items, rel_lo=rel_lo, rel_hi=rel_hi)
+    progress = opts.progress.sub(tag='generator features',
+                                 num_items=stats.max_items,
+                                 rel_lo=rel_lo,
+                                 rel_hi=rel_hi)
 
     # get detector
     if opts.feature_network is not None:
         with contextlib.redirect_stdout(None):
-            detector = F_RandomProj(opts.feature_network, proj_type=1).eval().to(opts.device)
+            detector = F_RandomProj(opts.feature_network,
+                                    proj_type=1).eval().to(opts.device)
             detector.proj_type = 0
     else:
-        detector = get_feature_detector(url=detector_url, device=opts.device, num_gpus=opts.num_gpus, rank=opts.rank, verbose=progress.verbose)
+        detector = get_feature_detector(url=detector_url,
+                                        device=opts.device,
+                                        num_gpus=opts.num_gpus,
+                                        rank=opts.rank,
+                                        verbose=progress.verbose)
 
     # Main loop.
     if sfid:
-        detector.layers.mixed_6.conv.register_forward_hook(getActivation('mixed6_conv'))
+        detector.layers.mixed_6.conv.register_forward_hook(
+            getActivation('mixed6_conv'))
 
     while not stats.is_full():
         images = []
         for _i in range(batch_size // batch_gen):
-            w = gen_utils.get_w_from_seed(G, batch_gen, opts.device, **opts.G_kwargs)
+            w = gen_utils.get_w_from_seed(G, batch_gen, opts.device,
+                                          **opts.G_kwargs)
             img = G.synthesis(w)
 
             img = (img * 127.5 + 128).clamp(0, 255).to(torch.uint8)
@@ -345,7 +462,8 @@ def compute_feature_stats_for_generator(opts, detector_url, detector_kwargs, rel
             else:
                 images = images.to(opts.device).to(torch.float32) / 127.5 - 1
                 features = detector(images)
-                features = torch.nn.AdaptiveAvgPool2d(1)(features['3']).squeeze()
+                features = torch.nn.AdaptiveAvgPool2d(1)(
+                    features['3']).squeeze()
 
         stats.append_torch(features, num_gpus=opts.num_gpus, rank=opts.rank)
         progress.update(stats.num_items)

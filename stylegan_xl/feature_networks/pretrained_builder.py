@@ -11,6 +11,7 @@ from feature_networks.vit import _make_vit_b16_backbone, forward_vit
 from feature_networks.constants import ALL_MODELS, VITS, EFFNETS, REGNETS
 from pg_modules.blocks import Interpolate
 
+
 def _feature_splitter(model, idcs):
     pretrained = nn.Module()
     pretrained.layer0 = nn.Sequential(model.features[:idcs[0]])
@@ -19,35 +20,39 @@ def _feature_splitter(model, idcs):
     pretrained.layer3 = nn.Sequential(model.features[idcs[2]:idcs[3]])
     return pretrained
 
+
 def _make_resnet(model):
     pretrained = nn.Module()
     pretrained.layer0 = nn.Sequential(
-        model.conv1, model.bn1, model.relu, model.maxpool, model.layer1,
+        model.conv1,
+        model.bn1,
+        model.relu,
+        model.maxpool,
+        model.layer1,
     )
     pretrained.layer1 = model.layer2
     pretrained.layer2 = model.layer3
     pretrained.layer3 = model.layer4
     return pretrained
 
+
 def _make_regnet(model):
     pretrained = nn.Module()
-    pretrained.layer0 = nn.Sequential(
-        model.stem, model.s1
-    )
+    pretrained.layer0 = nn.Sequential(model.stem, model.s1)
     pretrained.layer1 = model.s2
     pretrained.layer2 = model.s3
     pretrained.layer3 = model.s4
     return pretrained
 
+
 def _make_nfnet(model):
     pretrained = nn.Module()
-    pretrained.layer0 = nn.Sequential(
-        model.stem, model.stages[0]
-    )
+    pretrained.layer0 = nn.Sequential(model.stem, model.stages[0])
     pretrained.layer1 = model.stages[1]
     pretrained.layer2 = model.stages[2]
     pretrained.layer3 = model.stages[3]
     return pretrained
+
 
 def _make_resnet_v2(model):
     pretrained = nn.Module()
@@ -56,6 +61,7 @@ def _make_resnet_v2(model):
     pretrained.layer2 = model.stages[2]
     pretrained.layer3 = model.stages[3]
     return pretrained
+
 
 def _make_resnet_clip(model):
     pretrained = nn.Module()
@@ -81,6 +87,7 @@ def _make_resnet_clip(model):
 
     return pretrained
 
+
 def _make_densenet(model):
     pretrained = nn.Module()
 
@@ -99,6 +106,7 @@ def _make_densenet(model):
 
     return pretrained
 
+
 def _make_shufflenet(model):
     pretrained = nn.Module()
     pretrained.layer0 = nn.Sequential(model.conv1, model.maxpool)
@@ -106,6 +114,7 @@ def _make_shufflenet(model):
     pretrained.layer2 = model.stage3
     pretrained.layer3 = model.stage4
     return pretrained
+
 
 def _make_cspresnet(model):
     pretrained = nn.Module()
@@ -115,25 +124,30 @@ def _make_cspresnet(model):
     pretrained.layer3 = model.stages[3]
     return pretrained
 
+
 def _make_efficientnet(model):
     pretrained = nn.Module()
-    pretrained.layer0 = nn.Sequential(
-        model.conv_stem, model.bn1, model.act1, *model.blocks[0:2]
-    )
+    pretrained.layer0 = nn.Sequential(model.conv_stem, model.bn1, model.act1,
+                                      *model.blocks[0:2])
     pretrained.layer1 = nn.Sequential(*model.blocks[2:3])
     pretrained.layer2 = nn.Sequential(*model.blocks[3:5])
     pretrained.layer3 = nn.Sequential(*model.blocks[5:9])
     return pretrained
 
+
 def _make_ghostnet(model):
     pretrained = nn.Module()
     pretrained.layer0 = nn.Sequential(
-        model.conv_stem, model.bn1, model.act1, *model.blocks[0:3],
+        model.conv_stem,
+        model.bn1,
+        model.act1,
+        *model.blocks[0:3],
     )
     pretrained.layer1 = nn.Sequential(*model.blocks[3:5])
     pretrained.layer2 = nn.Sequential(*model.blocks[5:7])
     pretrained.layer3 = nn.Sequential(*model.blocks[7:-1])
     return pretrained
+
 
 def _make_vit(model, name):
     if 'tiny' in name:
@@ -168,6 +182,7 @@ def _make_vit(model, name):
         start_index=2 if 'deit' in name else 1,
     )
 
+
 def calc_dims(pretrained, is_vit=False):
     dims = []
     inp_res = 256
@@ -191,6 +206,7 @@ def calc_dims(pretrained, is_vit=False):
     channels = dims[:, 0]
     res_mult = dims[:, 1] / inp_res
     return channels, res_mult
+
 
 def _make_pretrained(backbone, verbose=False):
     assert backbone in ALL_MODELS
@@ -406,7 +422,9 @@ def _make_pretrained(backbone, verbose=False):
     else:
         raise NotImplementedError('Wrong model name?')
 
-    pretrained.CHANNELS, pretrained.RES_MULT = calc_dims(pretrained, is_vit=backbone in VITS)
+    pretrained.CHANNELS, pretrained.RES_MULT = calc_dims(pretrained,
+                                                         is_vit=backbone
+                                                         in VITS)
 
     if verbose:
         print(f"Succesfully loaded:    {backbone}")
