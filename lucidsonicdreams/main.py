@@ -32,11 +32,6 @@ from .sample_effects import *
 #StyleGAN2 Imports
 cwd = os.getcwd()
 
-import sys
-import inspect
-from pretrained_networks import pretrained_networks  # Assuming you have this import
-
-
 class LucidSonicDream:
 
     def __init__(self,
