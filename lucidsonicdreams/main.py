@@ -732,7 +732,7 @@ for arg in ['array', 'strength', 'amplitude']:
                             drange=[-1, 1],
                             nchw_to_nhwc=False,
                             shrink=1):
-    """Convert a minibatch of images from float32 to uint8 with configurable dynamic range.Can be used as an output transformation for Network.run()."""
+        """Convert a minibatch of images from float32 to uint8 with configurable dynamic range.Can be used as an output transformation for Network.run()."""
 
         images = tf.cast(images, tf.float32)
         if shrink > 1:
