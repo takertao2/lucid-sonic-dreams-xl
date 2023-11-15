@@ -47,6 +47,9 @@ class LucidSonicDream:
                  num_possible_classes: int = None,
                  styles: str = None):  # Add 'styles' argument
 
+        # Add the following line to initialize style_exists
+            self.style_exists = True  # You might adjust this based on your logic
+           
         # Define the initialize_Gs function here
         def initialize_Gs(styles):
             # Implement your logic for initializing StyleGAN2 using the 'styles' parameter
