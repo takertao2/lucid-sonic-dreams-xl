@@ -163,27 +163,26 @@ class LucidSonicDream:
         self.wav, self.sr, self.frame_duration = wav, sr, frame_duration
         self.chrom_class, self.pitches_sorted = chrom_class, pitches_sorted
 
-
     def transform_classes(self):
         '''Transform/assign value of classes'''
-    
-    
+
         # If model does not use classes, simply return list of 0's
         if self.num_possible_classes == 0:
             self.classes = [0] * 12
-        
+
         else:
-        
+
             # If list of classes is not provided, generate a random sample
             if self.classes is None:
-                self.classes = random.sample(range(self.num_possible_classes),
-                                             min([self.num_possible_classes, 12]))
-        
+                self.classes = random.sample(
+                    range(self.num_possible_classes),
+                    min([self.num_possible_classes, 12]))
+
             # If length of list < 12, repeat list until length is 12
             if len(self.classes) < 12:
                 self.classes = (self.classes *
                                 int(np.ceil(12 / len(self.classes))))[:12]
-        
+
             # If dominant_classes_first is True, sort classes accordingly
             if self.dominant_classes_first:
                 self.classes = [
