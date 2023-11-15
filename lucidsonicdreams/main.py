@@ -198,72 +198,58 @@ else:
         ]
 
 
-def update_motion_signs(self):
-    '''Update direction of noise interpolation based on truncation value'''
+    def update_motion_signs(self):
+        '''Update direction of noise interpolation based on truncation value'''
 
+        m = self.motion_react
+        t = self.truncation
+        motion_signs = self.motion_signs
+        current_noise = self.current_noise
 
-m = self.motion_react
-t = self.truncation
-motion_signs = self.motion_signs
-current_noise = self.current_noise
+        # For each current value in the noise vector, change direction if the absolute
+        # value +/- motion_react is larger than 2*truncation
+        update = lambda cn, ms: 1 if cn - m < -2 * t else -1 if cn + m >= 2 * t else ms
+        update_vec = np.vectorize(update)
 
-# For each current value in noise vector, change direction if absolute
-# value +/- motion_react is larger than 2*truncation
-update = lambda cn, ms: 1 if cn - m < -2*t else \
-                       -1 if cn + m >= 2*t else ms
-update_vec = np.vectorize(update)
+        return update_vec(current_noise, motion_signs)
 
-return update_vec(current_noise, motion_signs)
+    def generate_class_vec(self, frame):
+        '''Generate a class vector using chromagram, where each pitch 
+        corresponds to a class'''
 
+        classes = self.classes
+        chrom_class = self.chrom_class
+        class_vecs = self.class_vecs
+        num_possible_classes = self.num_possible_classes
+        class_complexity = self.class_complexity
+        class_pitch_react = self.class_pitch_react * 43 / self.fps
 
-def generate_class_vec(self, frame):
-    '''Generate a class vector using chromagram, where each pitch 
-  corresponds to a class'''
+        # For the first class vector, simply use values from
+        # the first point in time where at least one pitch > 0
+        # (controls for silence at the start of a track)
+        if len(class_vecs) == 0:
+            first_chrom = chrom_class[:, np.min(np.where(chrom_class.sum(axis=0) > 0))]
+            update_dict = dict(zip(classes, first_chrom))
+            class_vec = np.array([update_dict.get(i) if update_dict.get(i) is not None else 0
+                                  for i in range(num_possible_classes)])
 
-    classes = self.classes
-    chrom_class = self.chrom_class
-    class_vecs = self.class_vecs
-    num_possible_classes = self.num_possible_classes
-    class_complexity = self.class_complexity
-    class_pitch_react = self.class_pitch_react * 43 / self.fps
+        # For succeeding vectors, update class values scaled by class_pitch_react
+        else:
+            update_dict = dict(zip(classes, chrom_class[:, frame]))
+            class_vec = class_vecs[frame - 1] + class_pitch_react * \
+                        np.array([update_dict.get(i) if update_dict.get(i) is not None else 0
+                                  for i in range(num_possible_classes)])
 
-    # For the first class vector, simple use values from
-    # the first point in time where at least one pitch > 0
-    # (controls for silence at the start of a track)
-    if len(class_vecs) == 0:
+        # Normalize class vector between 0 and 1
+        if np.where(class_vec != 0)[0].shape[0] != 0:
+            class_vec[class_vec < 0] = np.min(class_vec[class_vec >= 0])
+        class_vec = (class_vec - np.min(class_vec)) / np.ptp(class_vec)
 
-        first_chrom = chrom_class[:,
-                                  np.min(np.where(chrom_class.sum(
-                                      axis=0) > 0))]
-        update_dict = dict(zip(classes, first_chrom))
-        class_vec = np.array([update_dict.get(i) \
-                             if update_dict.get(i) is not None \
-                             else 0 \
-                             for i in range(num_possible_classes)])
+        # If all values in the class vector are equal, add 0.1 to the first value
+        if (len(class_vec) > 0) and (np.all(class_vec == class_vec[0])):
+            class_vec[0] += 0.1
 
-
-# For succeeding vectors, update class values scaled by class_pitch_react
-    else:
-
-        update_dict = dict(zip(classes, chrom_class[:, frame]))
-    class_vec = class_vecs[frame - 1] +\
-                class_pitch_react * \
-                np.array([update_dict.get(i) \
-                          if update_dict.get(i) is not None \
-                          else 0 \
-                          for i in range(num_possible_classes)])
-
-    # Normalize class vector between 0 and 1
-    if np.where(class_vec != 0)[0].shape[0] != 0:
-        class_vec[class_vec < 0] = np.min(class_vec[class_vec >= 0])
-    class_vec = (class_vec - np.min(class_vec)) / np.ptp(class_vec)
-
-    # If all values in class vector are equal, add 0.1 to first value
-    if (len(class_vec) > 0) and (np.all(class_vec == class_vec[0])):
-        class_vec[0] += 0.1
-
-    return class_vec * class_complexity
-
+        return class_vec * class_complexity
 
 def is_shuffle_frame(self, frame):
     '''Determines if classes should be shuffled in current frame'''
