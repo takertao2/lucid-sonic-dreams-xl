@@ -17,6 +17,8 @@ import moviepy.editor as mpy
 from moviepy.audio.AudioClip import AudioArrayClip
 import pygit2
 from time import sleep
+from dnnlib import tflib  # Assuming you have this import
+from dnnlib import pretrained_networks  # Assuming you have this import
 
 # import dnnlib_sg2
 # from dnnlib_sg2.tflib.tfutil import *
