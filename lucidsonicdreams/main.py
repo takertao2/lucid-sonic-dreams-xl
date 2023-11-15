@@ -49,9 +49,13 @@ class LucidSonicDream:
 
         # Add the following line to initialize style_exists
         self.style_exists = True  # You might adjust this based on your logic
+        # Assuming you have a function named initialize_Gs
+        self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
+        # Add the following line to initialize input_shape
+        self.input_shape = input_shape or 512  # You can adjust the default value
 
     # Define the initialize_Gs function here
-    def initialize_Gs(styles):
+    def initialize_Gs(self, styles):
         # Implement your logic for initializing StyleGAN2 using the 'styles' parameter
         # For example, loading the model from the specified path
         G, _, _ = pretrained_networks.load_networks(styles)
@@ -71,11 +75,6 @@ class LucidSonicDream:
         if (input_shape is None) or (num_possible_classes is None):
             sys.exit('input_shape and num_possible_classes '
                      'must be provided if style is a function')
-
-        # Assuming you have a function named initialize_Gs
-        self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
-        # Add the following line to initialize input_shape
-        self.input_shape = input_shape or 512  # You can adjust the default value
 
         # Define attributes
         self.song = song
