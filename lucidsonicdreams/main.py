@@ -43,8 +43,9 @@ class LucidSonicDream:
                flash_audio: str = None,
                style: str = 'wikiart',
                input_shape: int = None,
-               self.Gs = initialize_Gs(),
                num_possible_classes: int = None): 
+   # Initialize StyleGAN2 model
+        self.Gs = initialize_Gs()  # Assuming you have a function named initialize_Gs
 
     # If style is a function, raise exception if function does not take 
     # noise_batch or class_batch parameters
