@@ -33,8 +33,11 @@ from .sample_effects import *
 cwd = os.getcwd()
 
 
-class LucidSonicDream:
+import sys
+import inspect
+from pretrained_networks import pretrained_networks  # Assuming you have this import
 
+class LucidSonicDream:
     def __init__(self,
                  song: str,
                  pulse_audio: str = None,
@@ -50,7 +53,7 @@ class LucidSonicDream:
         self.Gs = self.initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
         # Add the following line to initialize style_exists
         self.style_exists = True  # You might adjust this based on your logic
-        # Add the following line to initialize input_shape
+        # Add the following line to initialize input_shape             
         self.input_shape = input_shape or 512  # You can adjust the default value
 
         # If style is a function, raise an exception if the function does not take
@@ -79,6 +82,14 @@ class LucidSonicDream:
         self.input_shape = input_shape or 512
         self.num_possible_classes = num_possible_classes
         self.style_exists = False
+
+    # Define the initialize_Gs function here
+    def initialize_Gs(self, styles):
+        # Implement your logic for initializing StyleGAN2 using the 'styles' parameter
+        # For example, loading the model from the specified path
+        G, _, _ = pretrained_networks.load_networks(styles)
+        return G
+
 
     # Define the initialize_Gs function here
     def initialize_Gs(self, styles):
