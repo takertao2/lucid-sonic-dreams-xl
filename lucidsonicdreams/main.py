@@ -43,6 +43,7 @@ class LucidSonicDream:
                flash_audio: str = None,
                style: str = 'wikiart',
                input_shape: int = None,
+               self.Gs = initialize_Gs(),
                num_possible_classes: int = None): 
 
     # If style is a function, raise exception if function does not take 
