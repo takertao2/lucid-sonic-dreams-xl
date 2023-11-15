@@ -32,31 +32,49 @@ from .sample_effects import *
 #StyleGAN2 Imports
 cwd = os.getcwd()
 
+from lucidsonicdreams import LucidSonicDream
 
 class LucidSonicDream:
-  def __init__(self, 
-               song: str,
-               pulse_audio: str = None,
-               motion_audio: str = None,
-               class_audio: str = None,
-               contrast_audio: str = None,
-               flash_audio: str = None,
-               style: str = 'wikiart',
-               input_shape: int = None,
-               num_possible_classes: int = None): 
-    # Initialize StyleGAN2 model
-    self.Gs = initialize_Gs()  # Assuming you have a function named initialize_Gs
+    def __init__(self, 
+                 song: str,
+                 pulse_audio: str = None,
+                 motion_audio: str = None,
+                 class_audio: str = None,
+                 contrast_audio: str = None,
+                 flash_audio: str = None,
+                 style: str = 'wikiart',
+                 input_shape: int = None,
+                 num_possible_classes: int = None,
+                 styles: str = None):  # Add 'styles' argument
+        # Initialize StyleGAN2 model
+        self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
 
-    # If style is a function, raise exception if function does not take 
-    # noise_batch or class_batch parameters
-    if callable(style):
+        # If style is a function, raise exception if function does not take 
+        # noise_batch or class_batch parameters
+       if callable(style):
      
-      func_sig = list(inspect.getfullargspec(style))[0]
+         func_sig = list(inspect.getfullargspec(style))[0]
 
-      for arg in ['noise_batch', 'class_batch']:
-        if arg not in func_sig:
-          sys.exit('func must be a function with parameters '\
-                   'noise_batch and class_batch')
+         for arg in ['noise_batch', 'class_batch']:
+           if arg not in func_sig:
+            sys.exit('func must be a function with parameters '\
+                     'noise_batch and class_batch')
+
+# Assuming you have a function named initialize_Gs
+def initialize_Gs(styles):
+    # Implement your logic for initializing StyleGAN2 using the 'styles' parameter
+    # For example, loading the model from the specified path
+    G, _, _ = pretrained_networks.load_networks(styles)
+    return G
+
+#    if callable(style):
+     
+#      func_sig = list(inspect.getfullargspec(style))[0]
+
+#      for arg in ['noise_batch', 'class_batch']:
+#        if arg not in func_sig:
+#          sys.exit('func must be a function with parameters '\
+#                   'noise_batch and class_batch')
           
       # Raise exception if input_shape or num_possible_classes is not provided
       if (input_shape is None) or (num_possible_classes is None):
