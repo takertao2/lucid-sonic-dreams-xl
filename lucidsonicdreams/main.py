@@ -260,24 +260,24 @@ def is_shuffle_frame(self, frame):
     '''Determines if classes should be shuffled in current frame'''
 
 
-class_shuffle_seconds = self.class_shuffle_seconds
-fps = self.fps
+    class_shuffle_seconds = self.class_shuffle_seconds
+    fps = self.fps
 
 # If class_shuffle_seconds is an integer, return True if current timestamp
 # (in seconds) is divisible by this integer
-if type(class_shuffle_seconds) == int:
-    if frame != 0 and frame % round(class_shuffle_seconds * fps) == 0:
-        return True
-    else:
-        return False
+    if type(class_shuffle_seconds) == int:
+        if frame != 0 and frame % round(class_shuffle_seconds * fps) == 0:
+            return True
+        else:
+            return False
 
 # If class_shuffle_seconds is a list, return True if current timestamp
 # (in seconds) is in list
-if type(class_shuffle_seconds) == list:
-    if frame / fps + self.start in class_shuffle_seconds:
-        return True
-    else:
-        return False
+    if type(class_shuffle_seconds) == list:
+        if frame / fps + self.start in class_shuffle_seconds:
+            return True
+        else:
+            return False
 
 
 def generate_vectors(self):
