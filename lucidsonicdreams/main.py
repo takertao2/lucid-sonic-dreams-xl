@@ -213,7 +213,7 @@ update = lambda cn, ms: 1 if cn - m < -2*t else \
                        -1 if cn + m >= 2*t else ms
 update_vec = np.vectorize(update)
 
-return update_vec(current_noise, motion_signs)
+    return update_vec(current_noise, motion_signs)
 
 
 def generate_class_vec(self, frame):
