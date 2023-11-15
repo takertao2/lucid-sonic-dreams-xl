@@ -76,7 +76,7 @@ class LucidSonicDream:
         self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
         # Add the following line to initialize input_shape
         self.input_shape = input_shape or 512  # You can adjust the default value
-        
+
         # Define attributes
         self.song = song
         self.pulse_audio = pulse_audio
