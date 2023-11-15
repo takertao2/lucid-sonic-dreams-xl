@@ -197,7 +197,6 @@ else:
             self.classes[i] for i in np.argsort(self.pitches_sorted)
         ]
 
-
     def update_motion_signs(self):
         '''Update direction of noise interpolation based on truncation value'''
 
@@ -228,10 +227,15 @@ else:
         # the first point in time where at least one pitch > 0
         # (controls for silence at the start of a track)
         if len(class_vecs) == 0:
-            first_chrom = chrom_class[:, np.min(np.where(chrom_class.sum(axis=0) > 0))]
+            first_chrom = chrom_class[:,
+                                      np.
+                                      min(np.where(
+                                          chrom_class.sum(axis=0) > 0))]
             update_dict = dict(zip(classes, first_chrom))
-            class_vec = np.array([update_dict.get(i) if update_dict.get(i) is not None else 0
-                                  for i in range(num_possible_classes)])
+            class_vec = np.array([
+                update_dict.get(i) if update_dict.get(i) is not None else 0
+                for i in range(num_possible_classes)
+            ])
 
         # For succeeding vectors, update class values scaled by class_pitch_react
         else:
@@ -250,6 +254,7 @@ else:
             class_vec[0] += 0.1
 
         return class_vec * class_complexity
+
 
 def is_shuffle_frame(self, frame):
     '''Determines if classes should be shuffled in current frame'''
