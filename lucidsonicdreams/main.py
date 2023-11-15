@@ -97,69 +97,69 @@ class LucidSonicDream:
         motion_percussive = self.motion_percussive
         motion_harmonic = self.motion_harmonic
 
-    # Load audio signal data
-    print("loading audio", self.song)
+        # Load audio signal data
+        print("loading audio", self.song)
+    
+        wav, sr = librosa.load(self.song, offset=start, duration=duration)
+        wav_motion = wav_pulse = wav_class = wav
+        sr_motion = sr_pulse = sr_class = sr
+        print("loaded audio", wav.shape, sr)
+    
+        # If pulse_percussive != pulse_harmonic
+        # or motion_percussive != motion_harmonic,
+        # decompose harmonic and percussive signals and assign accordingly
+        aud_unassigned = (not self.pulse_audio) or (not self.motion_audio)
+        pulse_bools_equal = pulse_percussive == pulse_harmonic
+        motion_bools_equal = motion_percussive == motion_harmonic
 
-    wav, sr = librosa.load(self.song, offset=start, duration=duration)
-    wav_motion = wav_pulse = wav_class = wav
-    sr_motion = sr_pulse = sr_class = sr
-    print("loaded audio", wav.shape, sr)
-
-    # If pulse_percussive != pulse_harmonic
-    # or motion_percussive != motion_harmonic,
-    # decompose harmonic and percussive signals and assign accordingly
-    aud_unassigned = (not self.pulse_audio) or (not self.motion_audio)
-    pulse_bools_equal = pulse_percussive == pulse_harmonic
-    motion_bools_equal = motion_percussive == motion_harmonic
-
-    if aud_unassigned and not all([pulse_bools_equal, motion_bools_equal]):
-        wav_harm, wav_perc = librosa.effects.hpss(wav)
-        wav_list = [wav, wav_harm, wav_perc]
-
-        pulse_bools = [pulse_bools_equal, pulse_harmonic, pulse_percussive]
-        wav_pulse = wav_list[pulse_bools.index(max(pulse_bools))]
-
-        motion_bools = [motion_bools_equal, motion_harmonic, motion_percussive]
-        wav_motion = wav_list[motion_bools.index(max(motion_bools))]
-
-    # Load audio signal data for Pulse, Motion, and Class if provided
-    if self.pulse_audio:
-        wav_pulse, sr_pulse = librosa.load(self.pulse_audio,
-                                           offset=start,
-                                           duration=duration)
-    if self.motion_audio:
-        wav_motion, sr_motion = librosa.load(self.motion_audio,
-                                             offset=start,
-                                             duration=duration)
-    if self.class_audio:
-        wav_class, sr_class = librosa.load(self.class_audio,
-                                           offset=start,
-                                           duration=duration)
-
-    # Calculate frame duration (i.e. samples per frame)
-    frame_duration = int(sr / fps - (sr / fps % 64))
-
-    # Generate normalized spectrograms for Pulse, Motion and Class
-    self.spec_norm_pulse = get_spec_norm(wav_pulse, sr_pulse, input_shape,
-                                         frame_duration)
-    self.spec_norm_motion = get_spec_norm(wav_motion, sr_motion, input_shape,
-                                          frame_duration)
-    self.spec_norm_class = get_spec_norm(wav_class, sr_class, input_shape,
-                                         frame_duration)
-
-    # Generate chromagram from Class audio
-    chrom_class = librosa.feature.chroma_cqt(y=wav_class,
-                                             sr=sr,
-                                             hop_length=frame_duration)
-    # Sort pitches based on "dominance"
-    chrom_class_norm = chrom_class/\
-                       chrom_class.sum(axis = 0, keepdims = 1)
-    chrom_class_sum = np.sum(chrom_class_norm, axis=1)
-    pitches_sorted = np.argsort(chrom_class_sum)[::-1]
-
-    # Assign attributes to be used for vector generation
-    self.wav, self.sr, self.frame_duration = wav, sr, frame_duration
-    self.chrom_class, self.pitches_sorted = chrom_class, pitches_sorted
+        if aud_unassigned and not all([pulse_bools_equal, motion_bools_equal]):
+            wav_harm, wav_perc = librosa.effects.hpss(wav)
+            wav_list = [wav, wav_harm, wav_perc]
+    
+            pulse_bools = [pulse_bools_equal, pulse_harmonic, pulse_percussive]
+            wav_pulse = wav_list[pulse_bools.index(max(pulse_bools))]
+    
+            motion_bools = [motion_bools_equal, motion_harmonic, motion_percussive]
+            wav_motion = wav_list[motion_bools.index(max(motion_bools))]
+    
+        # Load audio signal data for Pulse, Motion, and Class if provided
+        if self.pulse_audio:
+            wav_pulse, sr_pulse = librosa.load(self.pulse_audio,
+                                               offset=start,
+                                               duration=duration)
+        if self.motion_audio:
+            wav_motion, sr_motion = librosa.load(self.motion_audio,
+                                                 offset=start,
+                                                 duration=duration)
+        if self.class_audio:
+            wav_class, sr_class = librosa.load(self.class_audio,
+                                               offset=start,
+                                               duration=duration)
+    
+        # Calculate frame duration (i.e. samples per frame)
+        frame_duration = int(sr / fps - (sr / fps % 64))
+    
+        # Generate normalized spectrograms for Pulse, Motion and Class
+        self.spec_norm_pulse = get_spec_norm(wav_pulse, sr_pulse, input_shape,
+                                             frame_duration)
+        self.spec_norm_motion = get_spec_norm(wav_motion, sr_motion, input_shape,
+                                              frame_duration)
+        self.spec_norm_class = get_spec_norm(wav_class, sr_class, input_shape,
+                                             frame_duration)
+    
+        # Generate chromagram from Class audio
+        chrom_class = librosa.feature.chroma_cqt(y=wav_class,
+                                                 sr=sr,
+                                                 hop_length=frame_duration)
+        # Sort pitches based on "dominance"
+        chrom_class_norm = chrom_class/\
+                           chrom_class.sum(axis = 0, keepdims = 1)
+        chrom_class_sum = np.sum(chrom_class_norm, axis=1)
+        pitches_sorted = np.argsort(chrom_class_sum)[::-1]
+    
+        # Assign attributes to be used for vector generation
+        self.wav, self.sr, self.frame_duration = wav, sr, frame_duration
+        self.chrom_class, self.pitches_sorted = chrom_class, pitches_sorted
 
 
 def transform_classes(self):
