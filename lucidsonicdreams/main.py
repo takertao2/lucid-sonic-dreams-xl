@@ -37,7 +37,7 @@ cwd = os.getcwd()
 from lucidsonicdreams import LucidSonicDream
 
 class LucidSonicDream:
-def __init__(self, 
+  def __init__(self, 
          song: str,
          pulse_audio: str = None,
          motion_audio: str = None,

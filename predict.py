@@ -14,14 +14,14 @@ import numpy as np
 import PIL.Image
 import torch
 
-from imagenet_classes import nameToClassIdx 
+from imagenet_classes import nameToClassIdx
 
 sys.path.append("/content")
 
 sys_path = list(sys.path)
 
-
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device(
+    'cpu')
 
 
 def parse_range(s: Union[str, List]) -> List[int]:
@@ -34,12 +34,14 @@ def parse_range(s: Union[str, List]) -> List[int]:
     for p in s.split(','):
         m = range_re.match(p)
         if m:
-            ranges.extend(range(int(m.group(1)), int(m.group(2))+1))
+            ranges.extend(range(int(m.group(1)), int(m.group(2)) + 1))
         else:
             ranges.append(int(p))
     return ranges
 
+
 #----------------------------------------------------------------------------
+
 
 def parse_vec2(s: Union[str, Tuple[float, float]]) -> Tuple[float, float]:
     '''Parse a floating point 2-vector of syntax 'a,b'.
@@ -52,12 +54,14 @@ def parse_vec2(s: Union[str, Tuple[float, float]]) -> Tuple[float, float]:
         return (float(parts[0]), float(parts[1]))
     raise ValueError(f'cannot parse 2-vector {s}')
 
+
 #----------------------------------------------------------------------------
 
-def make_transform(translate: Tuple[float,float], angle: float):
+
+def make_transform(translate: Tuple[float, float], angle: float):
     m = np.eye(3)
-    s = np.sin(angle/360.0*np.pi*2)
-    c = np.cos(angle/360.0*np.pi*2)
+    s = np.sin(angle / 360.0 * np.pi * 2)
+    c = np.cos(angle / 360.0 * np.pi * 2)
     m[0][0] = c
     m[0][1] = s
     m[0][2] = translate[0]
@@ -65,23 +69,21 @@ def make_transform(translate: Tuple[float,float], angle: float):
     m[1][1] = c
     m[1][2] = translate[1]
     return m
-    
 
-models = [
-    "imagenet (XL)",
-    "ffhq (XL)",
-    "pokemon (XL)"
-]
+
+models = ["imagenet (XL)", "ffhq (XL)", "pokemon (XL)"]
 
 super_resolution = False  # @param {type: "boolean"}
 output_path = '/content'
 model_map = {
-    "imagenet (XL)": "https://s3.eu-central-1.amazonaws.com/avg-projects/stylegan_xl/models/imagenet1024.pkl",
-    "ffhq (XL)": "https://s3.eu-central-1.amazonaws.com/avg-projects/stylegan_xl/models/ffhq1024.pkl",
-    "pokemon (XL)": "https://s3.eu-central-1.amazonaws.com/avg-projects/stylegan_xl/models/pokemon1024.pkl",
+    "imagenet (XL)":
+    "https://s3.eu-central-1.amazonaws.com/avg-projects/stylegan_xl/models/imagenet1024.pkl",
+    "ffhq (XL)":
+    "https://s3.eu-central-1.amazonaws.com/avg-projects/stylegan_xl/models/ffhq1024.pkl",
+    "pokemon (XL)":
+    "https://s3.eu-central-1.amazonaws.com/avg-projects/stylegan_xl/models/pokemon1024.pkl",
     # "humans": "/content/StyleGAN-Human/pretrained_models/stylegan2_1024.pkl",
 }
-
 
 
 class Predictor(BasePredictor):
@@ -126,35 +128,40 @@ class Predictor(BasePredictor):
             choices=list(nameToClassIdx.keys()),
         ),
         audio_file: Path = Input(
-            description="Path to the uploaded audio file (.mp3, .wav are supported)"
-        ),
-        fps: int = Input(
-            description="Frames per second of generated video", default=20
-        ),
+            description=
+            "Path to the uploaded audio file (.mp3, .wav are supported)"),
+        fps: int = Input(description="Frames per second of generated video",
+                         default=20),
         pulse_react: int = Input(
-            description="The 'strength' of the pulse. It is recommended to keep this between 0 and 100.",
+            description=
+            "The 'strength' of the pulse. It is recommended to keep this between 0 and 100.",
             default=60,
         ),
         pulse_react_to: str = Input(
-            description="Whether the pulse should react to percussive or harmonic elements",
+            description=
+            "Whether the pulse should react to percussive or harmonic elements",
             choices=["percussive", "harmonic"],
             default="percussive",
         ),
         motion_react: int = Input(
-            description="The 'strength' of the motion. It is recommended to keep this between 0 and 100.",
+            description=
+            "The 'strength' of the motion. It is recommended to keep this between 0 and 100.",
             default=60,
         ),
         motion_react_to: str = Input(
-            description="Whether the motion should react to percussive or harmonic elements",
+            description=
+            "Whether the motion should react to percussive or harmonic elements",
             choices=["percussive", "harmonic"],
             default="harmonic",
         ),
         motion_randomness: int = Input(
-            description="Degree of randomness of motion. Higher values will typically prevent the video from cycling through the same visuals repeatedly. Must range from 0 to 100.",
+            description=
+            "Degree of randomness of motion. Higher values will typically prevent the video from cycling through the same visuals repeatedly. Must range from 0 to 100.",
             default=50,
         ),
         truncation: int = Input(
-            description='Controls the variety of visuals generated. Lower values lead to lower variety. Note: A very low value will usually lead to "jittery" visuals. Must range from 0 to 100.',
+            description=
+            'Controls the variety of visuals generated. Lower values lead to lower variety. Note: A very low value will usually lead to "jittery" visuals. Must range from 0 to 100.',
             default=50,
         ),
     ) -> Path:
@@ -172,7 +179,6 @@ class Predictor(BasePredictor):
         else:
             network_pkl = f"/content/{model_type}.pkl"
 
-
         # processed_input = preprocess(image)
         # output = self.model(processed_image, scale)
         # return postprocess(output)
@@ -180,13 +186,11 @@ class Predictor(BasePredictor):
         pulse_harmonic = pulse_react_to == "harmonic"
 
         motion_percussive = motion_react_to == "percussive"
-        motion_harmonic =  motion_react_to == "harmonic"
+        motion_harmonic = motion_react_to == "harmonic"
 
-
-        
         # Import the correct version of LSD
         if model_type == "humans":
-        #   %cd /content/StyleGAN-Human/
+            #   %cd /content/StyleGAN-Human/
             repo_path = "/content/StyleGAN-Human/"
         else:
             repo_path = "/src/stylegan_xl/"
@@ -196,21 +200,14 @@ class Predictor(BasePredictor):
         import dnnlib
         import legacy
 
-
         with dnnlib.util.open_url(network_pkl) as f:
-            G = legacy.load_network_pkl(f)['G_ema'].to(device) # type: ignore
+            G = legacy.load_network_pkl(f)['G_ema'].to(device)  # type: ignore
 
         noise_dim = G.z_dim
 
-        def generate_images(
-            G,
-            z,
-            truncation_psi: float,
-            noise_mode: str,
-            translate: Tuple[float,float],
-            rotate: float,
-            class_idx: Optional[int]
-        ):
+        def generate_images(G, z, truncation_psi: float, noise_mode: str,
+                            translate: Tuple[float, float], rotate: float,
+                            class_idx: Optional[int]):
             """Generate images using pretrained network pickle.
             Examples:
             \b
@@ -226,11 +223,15 @@ class Predictor(BasePredictor):
             label = torch.zeros([len(z), G.c_dim], device=device)
             if G.c_dim != 0:
                 if class_idx is None:
-                    raise click.ClickException('Must specify class label with --class when using a conditional network')
+                    raise click.ClickException(
+                        'Must specify class label with --class when using a conditional network'
+                    )
                 label[:, class_idx] = 1
             else:
                 if class_idx is not None:
-                    print ('warn: --class=lbl ignored when running on an unconditional network')
+                    print(
+                        'warn: --class=lbl ignored when running on an unconditional network'
+                    )
 
             # Generate images.
             #for seed_idx, seed in enumerate(seeds):
@@ -243,47 +244,52 @@ class Predictor(BasePredictor):
                 m = np.linalg.inv(m)
                 G.synthesis.input.transform.copy_(torch.from_numpy(m))
 
-            img = G(z, label, truncation_psi=truncation_psi, noise_mode=noise_mode)
-            img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
+            img = G(z,
+                    label,
+                    truncation_psi=truncation_psi,
+                    noise_mode=noise_mode)
+            img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(
+                torch.uint8)
             return [PIL.Image.fromarray(i.cpu().numpy(), 'RGB') for i in img]
-        
+
         def projected_gan(noise_batch, class_batch):
             noise_tensor = torch.from_numpy(noise_batch).cuda().float()
-            return generate_images(G, noise_tensor, 1, "const", (0,0), 0, classIdx)
+            return generate_images(G, noise_tensor, 1, "const", (0, 0), 0,
+                                   classIdx)
 
         import lucidsonicdreams as lsd
 
-        L = lsd.LucidSonicDream(song = str(audio_file),
-                            style = projected_gan, 
-                            input_shape = noise_dim,
-                            num_possible_classes = 0)
+        L = lsd.LucidSonicDream(song=str(audio_file),
+                                style=projected_gan,
+                                input_shape=noise_dim,
+                                num_possible_classes=0)
 
-
-
-        L.hallucinate(file_name = 'output.mp4',
-                    resolution = None,
-                    fps = fps,
-                    motion_percussive = motion_percussive,
-                    motion_harmonic = motion_harmonic,
-                    pulse_percussive = pulse_percussive,
-                    pulse_harmonic = pulse_harmonic,
-                    pulse_react = pulse_react / 100,
-                    motion_react = motion_react / 100,
-                    motion_randomness = motion_randomness / 100,
-                    truncation = truncation / 100,
-                    start = 0, 
-                    batch_size = 8,
-                    )
-    
+        L.hallucinate(
+            file_name='output.mp4',
+            resolution=None,
+            fps=fps,
+            motion_percussive=motion_percussive,
+            motion_harmonic=motion_harmonic,
+            pulse_percussive=pulse_percussive,
+            pulse_harmonic=pulse_harmonic,
+            pulse_react=pulse_react / 100,
+            motion_react=motion_react / 100,
+            motion_randomness=motion_randomness / 100,
+            truncation=truncation / 100,
+            start=0,
+            batch_size=8,
+        )
 
         if model_type == "humans":
-            os.system(f'ffmpeg -y -i output.mp4 -vcodec libx264 -filter_complex "[0]pad=w=820:h=ih:x=153:y=0:color=black" {output_path}/lowres_output.mp4')
+            os.system(
+                f'ffmpeg -y -i output.mp4 -vcodec libx264 -filter_complex "[0]pad=w=820:h=ih:x=153:y=0:color=black" {output_path}/lowres_output.mp4'
+            )
         else:
             os.system(f"cp -v output.mp4 {output_path}/lowres_output.mp4")
-        
+
         try:
             del G
-        except: # G is not defined if standard lsd is used
+        except:  # G is not defined if standard lsd is used
             pass
         del lsd
         del dnnlib
