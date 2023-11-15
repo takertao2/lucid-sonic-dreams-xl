@@ -32,6 +32,8 @@ from .sample_effects import *
 #StyleGAN2 Imports
 cwd = os.getcwd()
 
+# StyleGAN2 Imports
+
 from lucidsonicdreams import LucidSonicDream
 
 class LucidSonicDream:
@@ -52,13 +54,17 @@ class LucidSonicDream:
         # If style is a function, raise exception if function does not take 
         # noise_batch or class_batch parameters
         if callable(style):
-     
-          func_sig = list(inspect.getfullargspec(style))[0]
+            func_sig = list(inspect.getfullargspec(style))[0]
 
-          for arg in ['noise_batch', 'class_batch']:
-            if arg not in func_sig:
-             sys.exit('func must be a function with parameters '\
-                      'noise_batch and class_batch')
+            for arg in ['noise_batch', 'class_batch']:
+                if arg not in func_sig:
+                    sys.exit('func must be a function with parameters '\
+                             'noise_batch and class_batch')
+
+        # Raise exception if input_shape or num_possible_classes is not provided
+        if (input_shape is None) or (num_possible_classes is None):
+            sys.exit('input_shape and num_possible_classes '\
+                     'must be provided if style is a function')
 
 # Assuming you have a function named initialize_Gs
 def initialize_Gs(styles):
@@ -66,20 +72,6 @@ def initialize_Gs(styles):
     # For example, loading the model from the specified path
     G, _, _ = pretrained_networks.load_networks(styles)
     return G
-
-#    if callable(style):
-     
-#      func_sig = list(inspect.getfullargspec(style))[0]
-
-#      for arg in ['noise_batch', 'class_batch']:
-#        if arg not in func_sig:
-#          sys.exit('func must be a function with parameters '\
-#                   'noise_batch and class_batch')
-          
-      # Raise exception if input_shape or num_possible_classes is not provided
-      if (input_shape is None) or (num_possible_classes is None):
-        sys.exit('input_shape and num_possible_classes '\
-                 'must be provided if style is a function')
 
     # Define attributes
     self.song = song
