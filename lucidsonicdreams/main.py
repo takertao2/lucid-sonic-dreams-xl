@@ -51,14 +51,14 @@ class LucidSonicDream:
 
         # If style is a function, raise exception if function does not take 
         # noise_batch or class_batch parameters
-       if callable(style):
+        if callable(style):
      
-         func_sig = list(inspect.getfullargspec(style))[0]
+          func_sig = list(inspect.getfullargspec(style))[0]
 
-         for arg in ['noise_batch', 'class_batch']:
-           if arg not in func_sig:
-            sys.exit('func must be a function with parameters '\
-                     'noise_batch and class_batch')
+          for arg in ['noise_batch', 'class_batch']:
+            if arg not in func_sig:
+             sys.exit('func must be a function with parameters '\
+                      'noise_batch and class_batch')
 
 # Assuming you have a function named initialize_Gs
 def initialize_Gs(styles):
