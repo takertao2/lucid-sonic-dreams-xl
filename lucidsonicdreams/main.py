@@ -50,42 +50,42 @@ class LucidSonicDream:
         # Add the following line to initialize style_exists
             self.style_exists = True  # You might adjust this based on your logic
            
-        # Define the initialize_Gs function here
-        def initialize_Gs(styles):
-            # Implement your logic for initializing StyleGAN2 using the 'styles' parameter
-            # For example, loading the model from the specified path
-            G, _, _ = pretrained_networks.load_networks(styles)
-            return G
+    # Define the initialize_Gs function here
+    def initialize_Gs(styles):
+        # Implement your logic for initializing StyleGAN2 using the 'styles' parameter
+        # For example, loading the model from the specified path
+        G, _, _ = pretrained_networks.load_networks(styles)
+        return G
 
-            # If style is a function, raise an exception if the function does not take
-            # noise_batch or class_batch parameters
-            if callable(style):
-                func_sig = list(inspect.getfullargspec(style))[0]
+        # If style is a function, raise an exception if the function does not take
+        # noise_batch or class_batch parameters
+        if callable(style):
+            func_sig = list(inspect.getfullargspec(style))[0]
 
-                for arg in ['noise_batch', 'class_batch']:
-                    if arg not in func_sig:
-                        sys.exit('func must be a function with parameters '
-                                 'noise_batch and class_batch')
+            for arg in ['noise_batch', 'class_batch']:
+                if arg not in func_sig:
+                    sys.exit('func must be a function with parameters '
+                             'noise_batch and class_batch')
 
-            # Raise an exception if input_shape or num_possible_classes are not provided
-            if (input_shape is None) or (num_possible_classes is None):
-                sys.exit('input_shape and num_possible_classes '
-                         'must be provided if style is a function')
+        # Raise an exception if input_shape or num_possible_classes are not provided
+        if (input_shape is None) or (num_possible_classes is None):
+            sys.exit('input_shape and num_possible_classes '
+                     'must be provided if style is a function')
 
-            # Assuming you have a function named initialize_Gs
-            self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
+        # Assuming you have a function named initialize_Gs
+        self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
 
-            # Define attributes
-            self.song = song
-            self.pulse_audio = pulse_audio
-            self.motion_audio = motion_audio
-            self.class_audio = class_audio
-            self.contrast_audio = contrast_audio
-            self.flash_audio = flash_audio
-            self.style = style
-            self.input_shape = input_shape or 512
-            self.num_possible_classes = num_possible_classes
-            self.style_exists = False
+        # Define attributes
+        self.song = song
+        self.pulse_audio = pulse_audio
+        self.motion_audio = motion_audio
+        self.class_audio = class_audio
+        self.contrast_audio = contrast_audio
+        self.flash_audio = flash_audio
+        self.style = style
+        self.input_shape = input_shape or 512
+        self.num_possible_classes = num_possible_classes
+        self.style_exists = False
 
     def load_specs(self):
         # '''Load normalized spectrograms and chromagram'''
