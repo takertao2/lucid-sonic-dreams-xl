@@ -20,7 +20,7 @@ build:
   # a list of packages in the format <package-name>==<version>
   python_packages:
     - "ninja"
-    # - "tensorflow-gpu==1.15"
+    - "tensorflow-gpu==1.15"
     - "ftfy==6.1.1"
     - "timm==0.6.7"
     - "dill==0.3.5.1"
@@ -38,8 +38,8 @@ build:
     - "cd /content && wget -c -N https://s3.eu-central-1.amazonaws.com/avg-projects/stylegan_xl/models/pokemon1024.pkl -O \"/content/pokemon (XL).pkl\""
     - "pip install regex"
     - "pip install scikit-image"
-    # - "cd /content && git clone https://github.com/NVlabs/stylegan2-ada.git stylegan2"
-    # - "cd /content && cp -rv stylegan2/dnnlib ./dnnlib_sg2"
+   - "cd /content && git clone https://github.com/NVlabs/stylegan2-ada.git stylegan2"
+   - "cd /content && cp -rv stylegan2/dnnlib ./dnnlib_sg2"
     - "pip install librosa moviepy"
     - "pip install pygit2 pandas gdown mega.py ninja"
     # - "wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip -o /content/ninja-linux.zip"
