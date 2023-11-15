@@ -49,11 +49,11 @@ class LucidSonicDream:
          num_possible_classes: int = None,
          styles: str = None):  # Add 'styles' argument
 # Initialize StyleGAN2 model
-self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
+    self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
 
 # If style is a function, raise exception if function does not take 
 # noise_batch or class_batch parameters
-if callable(style):
+  if callable(style):
     func_sig = list(inspect.getfullargspec(style))[0]
 
     for arg in ['noise_batch', 'class_batch']:
@@ -62,34 +62,34 @@ if callable(style):
                      'noise_batch and class_batch')
 
 # Raise exception if input_shape or num_possible_classes is not provided
-if (input_shape is None) or (num_possible_classes is None):
+  if (input_shape is None) or (num_possible_classes is None):
     sys.exit('input_shape and num_possible_classes '\
              'must be provided if style is a function')
 
 # Assuming you have a function named initialize_Gs
-def initialize_Gs(styles):
+  def initialize_Gs(styles):
 # Implement your logic for initializing StyleGAN2 using the 'styles' parameter
 # For example, loading the model from the specified path
-G, _, _ = pretrained_networks.load_networks(styles)
-return G
+   G, _, _ = pretrained_networks.load_networks(styles)
+   return G
 
 # Define attributes
-self.song = song
-self.pulse_audio = pulse_audio
-self.motion_audio = motion_audio
-self.class_audio = class_audio
-self.contrast_audio = contrast_audio
-self.flash_audio = flash_audio
-self.style = style
-self.input_shape = input_shape or 512
-self.num_possible_classes = num_possible_classes 
-self.style_exists = False
+  self.song = song
+  self.pulse_audio = pulse_audio
+  self.motion_audio = motion_audio
+  self.class_audio = class_audio
+  self.contrast_audio = contrast_audio
+  self.flash_audio = flash_audio
+  self.style = style
+  self.input_shape = input_shape or 512
+  self.num_possible_classes = num_possible_classes 
+  self.style_exists = False
 
 
 
 def load_specs(self):
-'''Load normalized spectrograms and chromagram'''
-print("loading specs")
+# '''Load normalized spectrograms and chromagram'''
+  print("loading specs")
 
 start = self.start
 duration = self.duration
@@ -162,7 +162,7 @@ self.chrom_class, self.pitches_sorted = chrom_class, pitches_sorted
 
 
 def transform_classes(self):
-'''Transform/assign value of classes'''
+  '''Transform/assign value of classes'''
 
 # If model does not use classes, simply return list of 0's
 if self.num_possible_classes == 0:
@@ -185,7 +185,7 @@ else:
 
 
 def update_motion_signs(self):
-'''Update direction of noise interpolation based on truncation value'''
+  '''Update direction of noise interpolation based on truncation value'''
 m = self.motion_react
 t = self.truncation
 motion_signs = self.motion_signs
@@ -200,7 +200,7 @@ update_vec = np.vectorize(update)
 return update_vec(current_noise, motion_signs)
 
 def generate_class_vec(self, frame):
-'''Generate a class vector using chromagram, where each pitch 
+  '''Generate a class vector using chromagram, where each pitch 
    corresponds to a class'''
 
 classes = self.classes 
@@ -246,7 +246,7 @@ return class_vec*class_complexity
         
 
 def is_shuffle_frame(self, frame):
-'''Determines if classes should be shuffled in current frame'''
+  '''Determines if classes should be shuffled in current frame'''
 
 class_shuffle_seconds = self.class_shuffle_seconds 
 fps = self.fps 
@@ -269,7 +269,7 @@ if type(class_shuffle_seconds) == list:
 
 
 def generate_vectors(self):
-'''Generates noise and class vectors as inputs for each frame'''
+  '''Generates noise and class vectors as inputs for each frame'''
 
 PULSE_SMOOTH = 0.75
 MOTION_SMOOTH = 0.75
@@ -395,7 +395,7 @@ if class_smooth_frames > 1:
   
 
 def setup_effects(self):
-'''Initializes effects to be applied to each frame'''
+  '''Initializes effects to be applied to each frame'''
 
 self.custom_effects = self.custom_effects or []
 start = self.start
@@ -443,7 +443,7 @@ for effect in self.custom_effects:
 
 
 def generate_frames(self):
-'''Generate GAN output for each frame of video'''
+  '''Generate GAN output for each frame of video'''
 
 file_name = self.file_name
 resolution = self.resolution
@@ -536,7 +536,7 @@ def hallucinate(self,
               flash_strength: float = None,
               flash_percussive: bool = None,
               custom_effects: list = None):
-'''Full pipeline of video generation'''
+  '''Full pipeline of video generation'''
 
 # Raise exception if speed_fpm > fps*60
 if speed_fpm > fps*60:
@@ -659,12 +659,12 @@ if not save_frames:
 
 
 class EffectsGenerator:
-def __init__(self, 
+  def __init__(self, 
            func, 
            audio: str = None,
            strength: float = 0.5,
            percussive: bool = True):
-self.audio = audio
+    self.audio = audio
 self.func = func 
 self.strength = strength
 self.percussive = percussive
@@ -679,7 +679,7 @@ for arg in ['array', 'strength', 'amplitude']:
 
 
 def render_audio(self, start, duration, n_mels, hop_length):
-'''Prepare normalized spectrogram of audio to be used for effect'''
+  '''Prepare normalized spectrogram of audio to be used for effect'''
 
 # Load spectrogram
 wav, sr = librosa.load(self.audio, offset=start, duration=duration)
@@ -693,25 +693,25 @@ self.spec = get_spec_norm(wav, sr, n_mels=n_mels, hop_length=hop_length)
 
 
 def apply_effect(self, array, index):
-'''Apply effect to image (array)'''
+  '''Apply effect to image (array)'''
 
 amplitude = self.spec[index]
 return self.func(array=array, strength = self.strength, amplitude=amplitude)
 
 
 def convert_images_from_uint8(images, drange=[-1,1], nhwc_to_nchw=False):
-"""Convert a minibatch of images from uint8 to float32 with configurable dynamic range.
+    """Convert a minibatch of images from uint8 to float32 with configurable dynamic range.
 Can be used as an input transformation for Network.run().
 """
 print(images)
 images = tf.cast(images, tf.float32)
 if nhwc_to_nchw:
     images = tf.transpose(images, [0, 3, 1, 2])
-return (images - drange[0]) * ((drange[1] - drange[0]) / 255)
+    return (images - drange[0]) * ((drange[1] - drange[0]) / 255)
 
 
 def convert_images_to_uint8(images, drange=[-1,1], nchw_to_nhwc=False, shrink=1):
-"""Convert a minibatch of images from float32 to uint8 with configurable dynamic range.
+    """Convert a minibatch of images from float32 to uint8 with configurable dynamic range.
 Can be used as an output transformation for Network.run().
 """
 images = tf.cast(images, tf.float32)
@@ -722,4 +722,5 @@ if nchw_to_nhwc:
     images = tf.transpose(images, [0, 2, 3, 1])
 scale = 255 / (drange[1] - drange[0])
 images = images * scale + (0.5 - drange[0] * scale)
-return tf.saturate_cast(images, tf.uint8)
+return tf.saturate_cast(images, tf.uint8
+)
