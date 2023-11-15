@@ -88,14 +88,14 @@ class LucidSonicDream:
         # '''Load normalized spectrograms and chromagram'''
         print("loading specs")
 
-    start = self.start
-    duration = self.duration
-    fps = self.fps
-    input_shape = self.input_shape
-    pulse_percussive = self.pulse_percussive
-    pulse_harmonic = self.pulse_harmonic
-    motion_percussive = self.motion_percussive
-    motion_harmonic = self.motion_harmonic
+        start = self.start
+        duration = self.duration
+        fps = self.fps
+        input_shape = self.input_shape
+        pulse_percussive = self.pulse_percussive
+        pulse_harmonic = self.pulse_harmonic
+        motion_percussive = self.motion_percussive
+        motion_harmonic = self.motion_harmonic
 
     # Load audio signal data
     print("loading audio", self.song)
