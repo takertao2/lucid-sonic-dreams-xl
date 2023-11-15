@@ -713,25 +713,22 @@ if self.percussive:
 self.spec = get_spec_norm(wav, sr, n_mels=n_mels, hop_length=hop_length)
 
 
-def apply_effect(self, array, index):
-    '''Apply effect to image (array)'''
+    def apply_effect(self, array, index):
+        '''Apply effect to image (array)'''
+        amplitude = self.spec[index]
+        return self.func(array=array, strength=self.strength, amplitude=amplitude)
 
 
-amplitude = self.spec[index]
-return self.func(array=array, strength=self.strength, amplitude=amplitude)
-
-
-def convert_images_from_uint8(images, drange=[-1, 1], nhwc_to_nchw=False):
-    """Convert a minibatch of images from uint8 to float32 with configurable dynamic range.
+    def convert_images_from_uint8(images, drange=[-1, 1], nhwc_to_nchw=False):
+        """Convert a minibatch of images from uint8 to float32 with configurable dynamic range.
 Can be used as an input transformation for Network.run().
 """
 
-
-print(images)
-images = tf.cast(images, tf.float32)
-if nhwc_to_nchw:
-    images = tf.transpose(images, [0, 3, 1, 2])
-    return (images - drange[0]) * ((drange[1] - drange[0]) / 255)
+        print(images)
+        images = tf.cast(images, tf.float32)
+        if nhwc_to_nchw:
+            images = tf.transpose(images, [0, 3, 1, 2])
+        return (images - drange[0]) * ((drange[1] - drange[0]) / 255)
 
 
 def convert_images_to_uint8(images,
