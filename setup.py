@@ -12,8 +12,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/takerdao2/lucid-sonic-dreams",
-    download_url=
-    "https://github.com/takertao2/lucid-sonic-dreams/lucid-sonic-dreams.tar.gz",
+   # download_url=
+   # "https://github.com/takertao2/lucid-sonic-dreams/lucid-sonic-dreams.tar.gz",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
