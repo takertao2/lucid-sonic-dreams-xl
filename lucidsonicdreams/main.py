@@ -48,120 +48,120 @@ class LucidSonicDream:
                  styles: str = None):  # Add 'styles' argument
 
         # Define the initialize_Gs function here
-        def initialize_Gs(styles):
-            # Implement your logic for initializing StyleGAN2 using the 'styles' parameter
-            # For example, loading the model from the specified path
-            G, _, _ = pretrained_networks.load_networks(styles)
-            return G
+    def initialize_Gs(styles):
+        # Implement your logic for initializing StyleGAN2 using the 'styles' parameter
+        # For example, loading the model from the specified path
+        G, _, _ = pretrained_networks.load_networks(styles)
+        return G
 
-        # If style is a function, raise an exception if the function does not take
-        # noise_batch or class_batch parameters
-        if callable(style):
-            func_sig = list(inspect.getfullargspec(style))[0]
+    # If style is a function, raise an exception if the function does not take
+    # noise_batch or class_batch parameters
+    if callable(style):
+        func_sig = list(inspect.getfullargspec(style))[0]
 
-            for arg in ['noise_batch', 'class_batch']:
-                if arg not in func_sig:
-                    sys.exit('func must be a function with parameters '
-                             'noise_batch and class_batch')
+        for arg in ['noise_batch', 'class_batch']:
+            if arg not in func_sig:
+                sys.exit('func must be a function with parameters '
+                         'noise_batch and class_batch')
 
-        # Raise an exception if input_shape or num_possible_classes are not provided
-        if (input_shape is None) or (num_possible_classes is None):
-            sys.exit('input_shape and num_possible_classes '
-                     'must be provided if style is a function')
+    # Raise an exception if input_shape or num_possible_classes are not provided
+    if (input_shape is None) or (num_possible_classes is None):
+        sys.exit('input_shape and num_possible_classes '
+                 'must be provided if style is a function')
 
-        # Assuming you have a function named initialize_Gs
-        self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
+    # Assuming you have a function named initialize_Gs
+    self.Gs = initialize_Gs(styles)  # Pass 'styles' to initialize_Gs
 
-        # Define attributes
-        self.song = song
-        self.pulse_audio = pulse_audio
-        self.motion_audio = motion_audio
-        self.class_audio = class_audio
-        self.contrast_audio = contrast_audio
-        self.flash_audio = flash_audio
-        self.style = style
-        self.input_shape = input_shape or 512
-        self.num_possible_classes = num_possible_classes
-        self.style_exists = False
-
-
-def load_specs(self):
-    # '''Load normalized spectrograms and chromagram'''
-    print("loading specs")
+    # Define attributes
+    self.song = song
+    self.pulse_audio = pulse_audio
+    self.motion_audio = motion_audio
+    self.class_audio = class_audio
+    self.contrast_audio = contrast_audio
+    self.flash_audio = flash_audio
+    self.style = style
+    self.input_shape = input_shape or 512
+    self.num_possible_classes = num_possible_classes
+    self.style_exists = False
 
 
-start = self.start
-duration = self.duration
-fps = self.fps
-input_shape = self.input_shape
-pulse_percussive = self.pulse_percussive
-pulse_harmonic = self.pulse_harmonic
-motion_percussive = self.motion_percussive
-motion_harmonic = self.motion_harmonic
-
-# Load audio signal data
-print("loading audio", self.song)
-
-wav, sr = librosa.load(self.song, offset=start, duration=duration)
-wav_motion = wav_pulse = wav_class = wav
-sr_motion = sr_pulse = sr_class = sr
-print("loaded audio", wav.shape, sr)
-
-# If pulse_percussive != pulse_harmonic
-# or motion_percussive != motion_harmonic,
-# decompose harmonic and percussive signals and assign accordingly
-aud_unassigned = (not self.pulse_audio) or (not self.motion_audio)
-pulse_bools_equal = pulse_percussive == pulse_harmonic
-motion_bools_equal = motion_percussive == motion_harmonic
-
-if aud_unassigned and not all([pulse_bools_equal, motion_bools_equal]):
-    wav_harm, wav_perc = librosa.effects.hpss(wav)
-    wav_list = [wav, wav_harm, wav_perc]
-
-    pulse_bools = [pulse_bools_equal, pulse_harmonic, pulse_percussive]
-    wav_pulse = wav_list[pulse_bools.index(max(pulse_bools))]
-
-    motion_bools = [motion_bools_equal, motion_harmonic, motion_percussive]
-    wav_motion = wav_list[motion_bools.index(max(motion_bools))]
-
-# Load audio signal data for Pulse, Motion, and Class if provided
-if self.pulse_audio:
-    wav_pulse, sr_pulse = librosa.load(self.pulse_audio,
-                                       offset=start,
-                                       duration=duration)
-if self.motion_audio:
-    wav_motion, sr_motion = librosa.load(self.motion_audio,
-                                         offset=start,
-                                         duration=duration)
-if self.class_audio:
-    wav_class, sr_class = librosa.load(self.class_audio,
-                                       offset=start,
-                                       duration=duration)
-
-# Calculate frame duration (i.e. samples per frame)
-frame_duration = int(sr / fps - (sr / fps % 64))
-
-# Generate normalized spectrograms for Pulse, Motion and Class
-self.spec_norm_pulse = get_spec_norm(wav_pulse, sr_pulse, input_shape,
-                                     frame_duration)
-self.spec_norm_motion = get_spec_norm(wav_motion, sr_motion, input_shape,
-                                      frame_duration)
-self.spec_norm_class = get_spec_norm(wav_class, sr_class, input_shape,
-                                     frame_duration)
-
-# Generate chromagram from Class audio
-chrom_class = librosa.feature.chroma_cqt(y=wav_class,
-                                         sr=sr,
-                                         hop_length=frame_duration)
-# Sort pitches based on "dominance"
-chrom_class_norm = chrom_class/\
-                   chrom_class.sum(axis = 0, keepdims = 1)
-chrom_class_sum = np.sum(chrom_class_norm, axis=1)
-pitches_sorted = np.argsort(chrom_class_sum)[::-1]
-
-# Assign attributes to be used for vector generation
-self.wav, self.sr, self.frame_duration = wav, sr, frame_duration
-self.chrom_class, self.pitches_sorted = chrom_class, pitches_sorted
+    def load_specs(self):
+        # '''Load normalized spectrograms and chromagram'''
+        print("loading specs")
+    
+    
+    start = self.start
+    duration = self.duration
+    fps = self.fps
+    input_shape = self.input_shape
+    pulse_percussive = self.pulse_percussive
+    pulse_harmonic = self.pulse_harmonic
+    motion_percussive = self.motion_percussive
+    motion_harmonic = self.motion_harmonic
+    
+    # Load audio signal data
+    print("loading audio", self.song)
+    
+    wav, sr = librosa.load(self.song, offset=start, duration=duration)
+    wav_motion = wav_pulse = wav_class = wav
+    sr_motion = sr_pulse = sr_class = sr
+    print("loaded audio", wav.shape, sr)
+    
+    # If pulse_percussive != pulse_harmonic
+    # or motion_percussive != motion_harmonic,
+    # decompose harmonic and percussive signals and assign accordingly
+    aud_unassigned = (not self.pulse_audio) or (not self.motion_audio)
+    pulse_bools_equal = pulse_percussive == pulse_harmonic
+    motion_bools_equal = motion_percussive == motion_harmonic
+    
+    if aud_unassigned and not all([pulse_bools_equal, motion_bools_equal]):
+        wav_harm, wav_perc = librosa.effects.hpss(wav)
+        wav_list = [wav, wav_harm, wav_perc]
+    
+        pulse_bools = [pulse_bools_equal, pulse_harmonic, pulse_percussive]
+        wav_pulse = wav_list[pulse_bools.index(max(pulse_bools))]
+    
+        motion_bools = [motion_bools_equal, motion_harmonic, motion_percussive]
+        wav_motion = wav_list[motion_bools.index(max(motion_bools))]
+    
+    # Load audio signal data for Pulse, Motion, and Class if provided
+    if self.pulse_audio:
+        wav_pulse, sr_pulse = librosa.load(self.pulse_audio,
+                                           offset=start,
+                                           duration=duration)
+    if self.motion_audio:
+        wav_motion, sr_motion = librosa.load(self.motion_audio,
+                                             offset=start,
+                                             duration=duration)
+    if self.class_audio:
+        wav_class, sr_class = librosa.load(self.class_audio,
+                                           offset=start,
+                                           duration=duration)
+    
+    # Calculate frame duration (i.e. samples per frame)
+    frame_duration = int(sr / fps - (sr / fps % 64))
+    
+    # Generate normalized spectrograms for Pulse, Motion and Class
+    self.spec_norm_pulse = get_spec_norm(wav_pulse, sr_pulse, input_shape,
+                                         frame_duration)
+    self.spec_norm_motion = get_spec_norm(wav_motion, sr_motion, input_shape,
+                                          frame_duration)
+    self.spec_norm_class = get_spec_norm(wav_class, sr_class, input_shape,
+                                         frame_duration)
+    
+    # Generate chromagram from Class audio
+    chrom_class = librosa.feature.chroma_cqt(y=wav_class,
+                                             sr=sr,
+                                             hop_length=frame_duration)
+    # Sort pitches based on "dominance"
+    chrom_class_norm = chrom_class/\
+                       chrom_class.sum(axis = 0, keepdims = 1)
+    chrom_class_sum = np.sum(chrom_class_norm, axis=1)
+    pitches_sorted = np.argsort(chrom_class_sum)[::-1]
+    
+    # Assign attributes to be used for vector generation
+    self.wav, self.sr, self.frame_duration = wav, sr, frame_duration
+    self.chrom_class, self.pitches_sorted = chrom_class, pitches_sorted
 
 
 def transform_classes(self):
